@@ -6,12 +6,13 @@ export interface Room {
   name: string;
   status: Status;
   duration_sec: number;
+  elimination: boolean;
   question_ids: string[];
   current_index: number;
   current_question: { id: string; index: number; total: number; text: string | null } | null;
   started_at: string | null;
   ends_at: string | null;
-  reveal: { answer: Choice; explanation: string | null; text: string; o: number; x: number; none: number; total: number } | null;
+  reveal: { answer: Choice; explanation: string | null; text: string; o: number; x: number; none: number; total: number; eliminated?: number } | null;
 }
 
 export interface Player {
@@ -25,6 +26,7 @@ export interface Player {
   streak: number;
   best_streak: number;
   last_correct: boolean | null;
+  eliminated: boolean;
 }
 
 export interface Question {

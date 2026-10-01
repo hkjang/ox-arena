@@ -25,7 +25,7 @@ export function Display() {
         <div className="d-head">
           <div className="d-title">OX ARENA <small>{room.name}</small></div>
           <div className="d-count">{q && room.status !== 'waiting' ? `Q ${q.index + 1} / ${q.total}` : ''}</div>
-          <div className="d-count">👥 {players.length}명</div>
+          <div className="d-count">👥 {room.elimination ? `생존 ${counts.alive} / ${players.length}명` : `${players.length}명`}</div>
         </div>
 
         <div className="d-question">

@@ -98,7 +98,7 @@ function Panel({ token, onLogout }: { token: string; onLogout: () => void }) {
             <div className="kv"><span>현재 문제</span><b>{q && room.status !== 'waiting' ? `${q.index + 1} / ${q.total}` : '-'}</b></div>
             {q?.text && <p className="qtext">{q.text}</p>}
             <Timer room={room} />
-            <div className="kv big"><span className="O">O : {counts.o}명</span><span className="X">X : {counts.x}명</span><span>미선택 {counts.none}</span></div>
+            <div className="kv big"><span className="O">O : {counts.o}명</span><span className="X">X : {counts.x}명</span><span>미선택 {counts.none}</span>{room.elimination && <span>생존 {counts.alive}</span>}</div>
 
             <div className="ctl">
               {(room.status === 'waiting' || room.status === 'finished') && (
@@ -156,10 +156,10 @@ function Panel({ token, onLogout }: { token: string; onLogout: () => void }) {
         <section className="card">
           <h3>참가자 {players.length}명 (남 {players.filter((p) => p.gender === 'M').length} / 여 {players.filter((p) => p.gender === 'F').length})</h3>
           <table className="tbl">
-            <thead><tr><th>순위</th><th>닉네임</th><th>성별</th><th>점수</th><th /></tr></thead>
+            <thead><tr><th>순위</th><th>닉네임</th><th>성별</th><th>점수</th><th>상태</th><th /></tr></thead>
             <tbody>
               {ranked.map((p) => (
-                <tr key={p.id}><td>{p.rank}</td><td>{p.nickname}</td><td>{p.gender === 'M' ? '남' : '여'}</td><td>{p.score}</td>
+                <tr key={p.id}><td>{p.rank}</td><td>{p.nickname}</td><td>{p.gender === 'M' ? '남' : '여'}</td><td>{p.score}</td><td>{p.eliminated ? '💀 탈락' : '생존'}</td>
                   <td><button onClick={() => confirm(`${p.nickname} 님을 내보낼까요?`) && rpc('admin_kick', { p_token: token, p_player: p.id }).catch((e) => setMsg(errMsg(e)))}>내보내기</button></td></tr>
               ))}
             </tbody>
@@ -170,14 +170,16 @@ function Panel({ token, onLogout }: { token: string; onLogout: () => void }) {
   );
 }
 
-function RoomSettings({ room, act }: { room: { name: string; duration_sec: number }; act: (fn: string, a?: Record<string, unknown>) => Promise<unknown> }) {
+function RoomSettings({ room, act }: { room: { name: string; duration_sec: number; elimination: boolean }; act: (fn: string, a?: Record<string, unknown>) => Promise<unknown> }) {
   const [name, setName] = useState(room.name);
   const [dur, setDur] = useState(room.duration_sec);
+  const [elim, setElim] = useState(room.elimination);
   return (
     <div className="form">
       <label>방 이름<input value={name} onChange={(e) => setName(e.target.value)} /></label>
       <label>선택 시간(초)<input type="number" min={3} max={60} value={dur} onChange={(e) => setDur(Number(e.target.value))} /></label>
-      <button onClick={() => act('admin_update_room', { p_name: name, p_duration: dur })}>저장</button>
+      <label className="chk"><input type="checkbox" checked={elim} onChange={(e) => setElim(e.target.checked)} /> 오답자 탈락(관전 전환)</label>
+      <button onClick={() => act('admin_update_room', { p_name: name, p_duration: dur, p_elimination: elim })}>저장</button>
     </div>
   );
 }

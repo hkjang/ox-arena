@@ -98,3 +98,7 @@ h1 { margin:0; letter-spacing:2px; }
 @media (max-width: 800px) { .qrow, .qrow.add { grid-template-columns:1fr 1fr; } .qrow .no { display:none; } .qrow > :first-child:not(.no), .qrow input:first-of-type { grid-column:1/-1; } }
 .tbl { width:100%; border-collapse:collapse; } .tbl th, .tbl td { text-align:left; padding:6px; border-bottom:1px solid var(--line); }
 .qr { background:#fff; padding:6px; border-radius:10px; width:fit-content; }
+
+.link { background:none; border:none; color:var(--mut); text-decoration:underline; padding:0 4px; }
+.out-banner { background:#450a0a; border:1px solid #7f1d1d; border-radius:12px; padding:14px; text-align:center; font-weight:700; margin-top:12px; }
+.actor.ghost { opacity:.35; filter:grayscale(1); transform:translate(-50%,-100%); transition:left .7s, top .9s ease-in, opacity .9s; }

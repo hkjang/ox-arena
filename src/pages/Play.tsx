@@ -75,7 +75,14 @@ function Game({ roomId, me, onLeave }: { roomId: string; me: { id: string; token
   if (!room) return <div className="screen center"><div className="spinner" /></div>;
 
   const myChoice = local ?? choices[me.id] ?? null;
-  const canChoose = phase === 'choosing' || (phase === 'countdown');
+  const out = !!mine?.eliminated;
+  const canChoose = !out && (phase === 'choosing' || phase === 'countdown');
+
+  const leave = async () => {
+    if (!confirm('게임에서 퇴장할까요? 점수와 순위가 사라지고 다시 입장해야 합니다.')) return;
+    try { await rpc('leave_room', { p_player: me.id, p_token: me.token }); } catch { /* 이미 삭제됨 */ }
+    onLeave();
+  };
 
   const pick = async (c: Choice) => {
     if (phase !== 'choosing') return;
@@ -96,6 +103,7 @@ function Game({ roomId, me, onLeave }: { roomId: string; me: { id: string; token
     <div className="screen game">
       <header>
         <span>{room.name}</span>
+        <button className="link" onClick={leave}>퇴장</button>
         <span>{q && room.status !== 'waiting' ? `문제 ${q.index + 1} / ${q.total}` : ''}</span>
       </header>
 
@@ -116,17 +124,18 @@ function Game({ roomId, me, onLeave }: { roomId: string; me: { id: string; token
         </section>
       ) : phase === 'revealed' && rv ? (
         <section className="result">
-          <div className={`verdict ${myCorrect ? 'ok' : 'no'}`}>{myChoice == null ? '선택 안 함' : myCorrect ? '정답! 🎉' : '오답 😢'}</div>
+          <div className={`verdict ${myCorrect ? 'ok' : 'no'}`}>{out ? '탈락 💀' : myChoice == null ? '선택 안 함' : myCorrect ? '정답! 🎉' : '오답 😢'}</div>
           <div className="answer">정답은 <b className={rv.answer}>{rv.answer}</b></div>
           {rv.explanation && <p className="explain">{rv.explanation}</p>}
-          <div className="stat">O {rv.o}명 · X {rv.x}명 · 미선택 {rv.none}명{rv.total > 0 && ` · 정답률 ${Math.round(((rv.answer === 'O' ? rv.o : rv.x) / rv.total) * 100)}%`}</div>
+          <div className="stat">{room.elimination && `생존 ${counts.alive}명 · `}O {rv.o}명 · X {rv.x}명 · 미선택 {rv.none}명{rv.total > 0 && ` · 정답률 ${Math.round(((rv.answer === 'O' ? rv.o : rv.x) / rv.total) * 100)}%`}</div>
           <Leaderboard ranked={ranked} myId={me.id} limit={3} />
         </section>
       ) : (
         <Field players={players} choices={choices} myId={me.id} topId={ranked[0]?.id} counts={phase === 'choosing' || phase === 'locked' ? counts : undefined} />
       )}
 
-      {phase !== 'finished' && phase !== 'revealed' && (
+      {out && phase !== 'finished' && <div className="out-banner">💀 탈락했어요! 관전 모드로 구경하세요{mine ? ` (최종 ${mine.score}점)` : ''}</div>}
+      {phase !== 'finished' && phase !== 'revealed' && !out && (
         <div className="buttons">
           <button className={`btn-x ${myChoice === 'X' ? 'sel' : ''}`} disabled={!canChoose} onClick={() => pick('X')}>X</button>
           <button className={`btn-o ${myChoice === 'O' ? 'sel' : ''}`} disabled={!canChoose} onClick={() => pick('O')}>O</button>

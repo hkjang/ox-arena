@@ -24,8 +24,9 @@ export function Field({ players, choices, myId, topId, answer, big, counts }: Pr
   const showNames = n <= (big ? 80 : 30);
 
   const placed = useMemo(() => players.map((p) => {
-    const c = choices[p.id];
+    const c = p.eliminated ? undefined : choices[p.id];
     const u = hash(p.id, 1), v = hash(p.id, 2);
+    if (p.eliminated) return { p, c, left: 6 + u * 88, top: 97 };
     const left = c === 'O' ? 58 + u * 36 : c === 'X' ? 6 + u * 36 : 38 + u * 24;
     const top = 22 + v * 70;
     return { p, c, left, top };
@@ -39,9 +40,9 @@ export function Field({ players, choices, myId, topId, answer, big, counts }: Pr
       {placed.map(({ p, c, left, top }) => {
         const revealed = !!answer;
         const right = revealed && c === answer;
-        const wrong = revealed && c !== answer;
+        const wrong = revealed && !p.eliminated && c !== answer;
         return (
-          <div key={p.id} className={`actor ${wrong ? 'fall' : ''}`} style={{ left: `${left}%`, top: `${top}%`, zIndex: Math.round(top) + (p.id === myId ? 100 : 0) }}>
+          <div key={p.id} className={`actor ${wrong || p.eliminated ? 'fall' : ''} ${p.eliminated ? 'ghost' : ''}`} style={{ left: `${left}%`, top: `${top}%`, zIndex: Math.round(top) + (p.id === myId ? 100 : 0) }}>
             <Character avatar={p.avatar} gender={p.gender} size={size} name={showNames || p.id === myId ? p.nickname : undefined}
               crown={p.id === topId && p.score > 0} streak={p.streak} mine={p.id === myId} right={right} wrong={wrong} />
           </div>

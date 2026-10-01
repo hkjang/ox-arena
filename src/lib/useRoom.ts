@@ -120,8 +120,9 @@ export function useRoom(roomId: string) {
   const counts = useMemo(() => {
     let o = 0, x = 0;
     for (const c of Object.values(choices)) c === 'O' ? o++ : x++;
-    return { o, x, none: Math.max(0, players.length - o - x) };
-  }, [choices, players.length]);
+    const alive = players.filter((p) => !p.eliminated).length;
+    return { o, x, none: Math.max(0, alive - o - x), alive };
+  }, [choices, players]);
 
   return { room, missing, players, choices, counts, reload: loadRoom };
 }

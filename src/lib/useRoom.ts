@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase, rpc } from './supabase';
 import type { Choice, Player, Room } from './types';
+import { computeCounts, derivePhase } from './phase';
+
+// 단계·집계 계산은 phase.ts 로 분리했다. 기존 호출부가 그대로 쓰도록 재수출한다.
+export { computeCounts, derivePhase };
+export type { Phase } from './phase';
 
 /** 서버 시계 오프셋(ms): serverNow = Date.now() + offset */
 let offset = 0;
@@ -24,20 +29,6 @@ export function useNow(intervalMs = 100) {
     return () => clearInterval(t);
   }, [intervalMs]);
   return now;
-}
-
-export type Phase = 'waiting' | 'ready' | 'countdown' | 'choosing' | 'locked' | 'revealed' | 'finished';
-
-export function derivePhase(room: Room | null, now: number): Phase {
-  if (!room) return 'waiting';
-  if (room.status === 'playing') {
-    const s = room.started_at ? Date.parse(room.started_at) : 0;
-    const e = room.ends_at ? Date.parse(room.ends_at) : 0;
-    if (now < s) return 'countdown';
-    if (now < e) return 'choosing';
-    return 'locked';
-  }
-  return room.status;
 }
 
 export function useRoom(roomId: string) {
@@ -117,12 +108,7 @@ export function useRoom(roomId: string) {
     };
   }, [roomId, applyRoom, loadRoom, loadPlayers, loadChoices]);
 
-  const counts = useMemo(() => {
-    let o = 0, x = 0;
-    for (const c of Object.values(choices)) c === 'O' ? o++ : x++;
-    const alive = players.filter((p) => !p.eliminated).length;
-    return { o, x, none: Math.max(0, alive - o - x), alive };
-  }, [choices, players]);
+  const counts = useMemo(() => computeCounts(choices, players), [choices, players]);
 
   return { room, missing, players, choices, counts, reload: loadRoom };
 }

@@ -76,7 +76,8 @@ function Game({ roomId, me, onLeave }: { roomId: string; me: { id: string; token
 
   const myChoice = local ?? choices[me.id] ?? null;
   const out = !!mine?.eliminated;
-  const canChoose = !out && (phase === 'choosing' || phase === 'countdown');
+  // 카운트다운(started_at 전 3초)에는 서버가 LOCKED 로 거부하므로 버튼도 비활성 — pick() 가드와 같은 조건
+  const canChoose = !out && phase === 'choosing';
 
   const leave = async () => {
     if (!confirm('게임에서 퇴장할까요? 점수와 순위가 사라지고 다시 입장해야 합니다.')) return;

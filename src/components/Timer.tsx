@@ -3,7 +3,8 @@ import type { Room } from '../lib/types';
 
 /** 서버가 내려준 started_at / ends_at 기준으로 표시 */
 export function Timer({ room, big }: { room: Room; big?: boolean }) {
-  const now = useNow(50);
+  // 문제가 진행 중일 때만 시간을 따라간다 (나머지 단계에서는 아래가 전부 null 을 반환한다)
+  const now = useNow(room.status === 'playing' ? 50 : null);
   const phase = derivePhase(room, now);
   const s = room.started_at ? Date.parse(room.started_at) : 0;
   const e = room.ends_at ? Date.parse(room.ends_at) : 0;

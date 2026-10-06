@@ -11,7 +11,7 @@ import { Leaderboard, Podium } from '../components/Leaderboard';
 export function Display() {
   const roomId = useRoomId();
   const { room, players, choices, counts } = useRoom(roomId);
-  const now = useNow(200);
+  const now = useNow(room?.status === 'playing' ? 200 : null);
   const ranked = useMemo(() => rankPlayers(players), [players]);
   if (!room) return <div className="screen center dark"><div className="spinner" /></div>;
   const phase = derivePhase(room, now);

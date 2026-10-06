@@ -17,9 +17,13 @@ export async function syncClock() {
 }
 export const serverNow = () => Date.now() + offset;
 
-export function useNow(intervalMs = 100) {
+/** intervalMs 가 null 이면 타이머를 돌리지 않는다(화면이 시간에 의존하지 않는 구간에서 사용) */
+export function useNow(intervalMs: number | null = 100) {
   const [now, setNow] = useState(serverNow());
   useEffect(() => {
+    if (intervalMs == null) return;
+    // 멈춰 있던 동안 now 는 낡은 값이므로, 재시작 즉시 한 번 맞춰 준다
+    setNow(serverNow());
     const t = setInterval(() => setNow(serverNow()), intervalMs);
     return () => clearInterval(t);
   }, [intervalMs]);

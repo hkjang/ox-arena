@@ -170,16 +170,32 @@ function Panel({ token, onLogout }: { token: string; onLogout: () => void }) {
   );
 }
 
-function RoomSettings({ room, act }: { room: { name: string; duration_sec: number; elimination: boolean }; act: (fn: string, a?: Record<string, unknown>) => Promise<unknown> }) {
+export function RoomSettings({ room, act }: { room: { name: string; duration_sec: number; elimination: boolean }; act: (fn: string, a?: Record<string, unknown>) => Promise<unknown> }) {
   const [name, setName] = useState(room.name);
-  const [dur, setDur] = useState(room.duration_sec);
+  // 입력 중에는 원문 문자열을 들고 있다 (Number('') === 0 으로 입력칸이 리셋되는 것을 막는다)
+  const [dur, setDur] = useState(String(room.duration_sec));
   const [elim, setElim] = useState(room.elimination);
+
+  // 서버에서 방 설정이 바뀌면(다른 기기에서 저장 / 초기화) 폼도 따라간다.
+  // 의존성은 반드시 원시값 — room 객체는 4초 폴링마다 새로 만들어지므로 편집 중 입력이 날아간다.
+  useEffect(() => setName(room.name), [room.name]);
+  useEffect(() => setDur(String(room.duration_sec)), [room.duration_sec]);
+  useEffect(() => setElim(room.elimination), [room.elimination]);
+
+  // duration_sec 는 DB 에 check (between 3 and 60) 이 걸려 있다.
+  // 범위 밖 값을 보내면 영문 Postgres 메시지가 그대로 노출되므로 클라이언트에서 막는다.
+  const durNum = Number(dur);
+  const durOk = /^\d+$/.test(dur.trim()) && durNum >= 3 && durNum <= 60;
+  // 서버는 공백 이름을 nullif(btrim(...),'') 로 무시하는데 UI 는 저장된 것처럼 보인다.
+  const nameOk = !!name.trim();
   return (
     <div className="form">
       <label>방 이름<input value={name} onChange={(e) => setName(e.target.value)} /></label>
-      <label>선택 시간(초)<input type="number" min={3} max={60} value={dur} onChange={(e) => setDur(Number(e.target.value))} /></label>
+      <label>선택 시간(초)<input type="number" min={3} max={60} value={dur} onChange={(e) => setDur(e.target.value)} /></label>
       <label className="chk"><input type="checkbox" checked={elim} onChange={(e) => setElim(e.target.checked)} /> 오답자 탈락(관전 전환)</label>
-      <button onClick={() => act('admin_update_room', { p_name: name, p_duration: dur, p_elimination: elim })}>저장</button>
+      {!nameOk && <p className="err">방 이름을 입력하세요.</p>}
+      {!durOk && <p className="err">선택 시간은 3~60 사이의 숫자여야 합니다.</p>}
+      <button disabled={!nameOk || !durOk} onClick={() => act('admin_update_room', { p_name: name, p_duration: durNum, p_elimination: elim })}>저장</button>
     </div>
   );
 }

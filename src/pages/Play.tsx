@@ -43,7 +43,7 @@ function JoinForm({ roomId, onJoined }: { roomId: string; onJoined: (s: { id: st
       <div className="logo">O<span>X</span></div>
       <h1>OX ARENA</h1>
       <label>닉네임
-        <input value={nick} maxLength={12} onChange={(e) => setNick(e.target.value)} placeholder="예) 장형국" autoFocus />
+        <input value={nick} maxLength={12} onChange={(e) => setNick(e.target.value)} placeholder="예) 아서" autoFocus />
       </label>
       <div className="seg">
         <button type="button" className={gender === 'M' ? 'on' : ''} onClick={() => setGender('M')}>남자</button>

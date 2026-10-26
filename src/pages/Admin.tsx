@@ -99,6 +99,11 @@ function Panel({ token, onLogout }: { token: string; onLogout: () => void }) {
             {q?.text && <p className="qtext">{q.text}</p>}
             <Timer room={room} />
             <div className="kv big"><span className="O">O : {counts.o}명</span><span className="X">X : {counts.x}명</span><span>미선택 {counts.none}</span>{room.elimination && <span>생존 {counts.alive}</span>}</div>
+            <label className="chk"><input type="checkbox" checked={room.elimination} disabled={busy} onChange={(e) => {
+              const on = e.target.checked;
+              if (!on && players.some((p) => p.eliminated) && !confirm('탈락한 참가자가 모두 부활해 다음 문제부터 다시 선택할 수 있습니다. 계속할까요?')) return;
+              act('admin_update_room', { p_name: null, p_duration: null, p_elimination: on });
+            }} /> 오답자 탈락 (체크 해제 시 틀려도 다음 문제 계속 선택 가능)</label>
 
             <div className="ctl">
               {(room.status === 'waiting' || room.status === 'finished') && (
@@ -170,16 +175,14 @@ function Panel({ token, onLogout }: { token: string; onLogout: () => void }) {
   );
 }
 
-function RoomSettings({ room, act }: { room: { name: string; duration_sec: number; elimination: boolean }; act: (fn: string, a?: Record<string, unknown>) => Promise<unknown> }) {
+function RoomSettings({ room, act }: { room: { name: string; duration_sec: number }; act: (fn: string, a?: Record<string, unknown>) => Promise<unknown> }) {
   const [name, setName] = useState(room.name);
   const [dur, setDur] = useState(room.duration_sec);
-  const [elim, setElim] = useState(room.elimination);
   return (
     <div className="form">
       <label>방 이름<input value={name} onChange={(e) => setName(e.target.value)} /></label>
       <label>선택 시간(초)<input type="number" min={3} max={60} value={dur} onChange={(e) => setDur(Number(e.target.value))} /></label>
-      <label className="chk"><input type="checkbox" checked={elim} onChange={(e) => setElim(e.target.checked)} /> 오답자 탈락(관전 전환)</label>
-      <button onClick={() => act('admin_update_room', { p_name: name, p_duration: dur, p_elimination: elim })}>저장</button>
+      <button onClick={() => act('admin_update_room', { p_name: name, p_duration: dur, p_elimination: null })}>저장</button>
     </div>
   );
 }
